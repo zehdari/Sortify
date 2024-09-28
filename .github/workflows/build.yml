@@ -84,11 +84,7 @@ jobs:
       run: |
         docker run --rm -v ${{ github.workspace }}:/src -w /src rockylinux:8 \
         bash -c "dnf install -y epel-release && \
-                dnf install -y snapd && \
-                systemctl enable --now snapd.socket && \
-                ln -s /var/lib/snapd/snap /snap && \
-                snap install kde-qt6-sdk && \
-                dnf install -y mesa-libGL-devel python3 python3-devel gcc zlib-devel && \
+                dnf install -y mesa-libGL-devel python3 python3-devel gcc zlib-devel kde-qt6-sdk && \
                 python3 -m pip install wheel && \
                 python3 -m pip install --upgrade pip setuptools && \
                 python3 -m pip install --user --no-binary :all: PyQt6 && \
