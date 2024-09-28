@@ -345,7 +345,15 @@ class SortingVisualizer(QWidget):
         self.chart_window.show()
 
     def closeEvent(self, event):
-        event.accept()
+        # Stop the main visualization timer
+        if self.timer.isActive():
+            self.timer.stop()
+    
+        # Stop the green fill timer if it exists and is active
+        if hasattr(self, 'green_fill_timer') and self.green_fill_timer.isActive():
+            self.green_fill_timer.stop()
+    
+        event.accept()  # Allow the window to close
 
 class QChartWindow(QWidget):
     def __init__(self, sizes, runtimes, algorithm_name):
@@ -705,6 +713,12 @@ class MainWindow(QWidget):
         # Start sorting in both visualizers
         self.visualizer1.start_sorting()
         self.visualizer2.start_sorting()
+    
+    def closeEvent(self, event):
+        # Close child SortingVisualizer instances
+        self.visualizer1.close()
+        self.visualizer2.close()
+        event.accept()  # Allow the window to close
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
