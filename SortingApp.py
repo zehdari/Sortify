@@ -1,13 +1,15 @@
 import sys
 import random
 import time
+import tempfile
+import shutil
 from PyQt6.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem,
     QVBoxLayout, QWidget, QSlider, QPushButton, QHBoxLayout,
     QLabel, QComboBox, QLineEdit, QFileDialog
 )
 from PyQt6.QtCore import QTimer, QRectF, Qt
-from PyQt6.QtGui import QPainter, QColor, QPen, QFont
+from PyQt6.QtGui import QIcon, QPainter, QColor, QPen, QFont
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
 
 class SortingVisualizer(QWidget):
@@ -597,7 +599,7 @@ def shell_sort(arr):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sorting Algorithms Race")
+        self.setWindowTitle("Sortify")
 
         main_layout = QVBoxLayout()
 
@@ -701,8 +703,18 @@ class MainWindow(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
+    # Set the taskbar and window icon
+    app.setWindowIcon(QIcon("resources/sorticon.ico"))
+
     # Instantiate the main window with two sorting visualizers
     main_window = MainWindow()
     main_window.show()
+
+    # Clean up temp directory on exit
+    temp_dir = tempfile.gettempdir()
+    try:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    except Exception as e:
+        print(f"Failed to remove temp directory: {e}")
 
     sys.exit(app.exec())
