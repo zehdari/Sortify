@@ -72,8 +72,10 @@ jobs:
             # Install PyInstaller \
             python3.8 -m pip install pyinstaller && \
             # Build the executable with PyInstaller \
-            python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py
-
+            python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
+            # Set execute permissions inside the container \
+            chmod +x dist/Sortify
+            
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
       if: matrix.os != 'redhat'
