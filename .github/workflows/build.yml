@@ -56,6 +56,12 @@ jobs:
       run: |
         pyinstaller --onefile --windowed SortingApp.py
 
+    # Windows-specific step to include the icon
+    - name: Build with PyInstaller for Windows (with icon)
+      if: matrix.os == 'windows-latest'
+      run: |
+        pyinstaller --onefile --windowed --icon=resources/sorticon.ico SortingApp.py
+
     # macOS-specific step to set executable permissions and zip the .app bundle
     - name: Set permissions and zip .app for macOS
       if: matrix.os == 'macos-latest'
