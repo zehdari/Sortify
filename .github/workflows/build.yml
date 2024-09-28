@@ -46,8 +46,7 @@ jobs:
           qtbase5-dev-tools
 
     # Install dependencies for macOS and Windows using requirements.txt
-    - name: Install dependencies (macOS/Windows)
-      if: matrix.os != 'ubuntu-latest'
+    - name: Install dependencies (Ubuntu/macOS/Windows)
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
