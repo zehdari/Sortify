@@ -55,32 +55,40 @@ jobs:
     - name: Build with PyInstaller for Windows
       if: matrix.os == 'windows-latest'
       run: |
-        pyinstaller --onefile --windowed --icon=resources/sorticon.ico SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.ico SortingApp.py
 
     # Build with PyInstaller for macOS
     - name: Build with PyInstaller for macOS
       if: matrix.os == 'macos-latest'
       run: |
-        pyinstaller --onefile --windowed --icon=resources/sorticon.icns SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.icns SortingApp.py
 
     # Build with PyInstaller for Ubuntu
     - name: Build with PyInstaller for Ubuntu
       if: matrix.os == 'ubuntu-latest'
       run: |
-        pyinstaller --onefile --windowed --icon=resources/sorticon-256x256.png SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png SortingApp.py
 
     # macOS-specific step to set executable permissions and zip the .app bundle
     - name: Set permissions and zip .app for macOS
       if: matrix.os == 'macos-latest'
       run: |
-        chmod +x dist/SortingApp.app/Contents/MacOS/SortingApp
+        chmod +x dist/Sortify.app/Contents/MacOS/Sortify
         cd dist
-        zip -r SortingApp-macOS.zip SortingApp.app
+        zip -r Sortify-macOS.zip Sortify.app
 
-    # Upload the native Ubuntu/macOS/Windows builds
+    # Upload only the .zip file for macOS
+    - name: Upload macOS zip
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable-macos
+        path: dist/SortingApp-macOS.zip
+
+    # Upload all files for Ubuntu and Windows builds
     - name: Upload executable (Native Builds)
+      if: matrix.os != 'macos-latest'
       uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
-        path: |
-          dist/*
+        path: dist/*
