@@ -54,13 +54,13 @@ jobs:
     # Build with PyInstaller for Ubuntu, macOS, and Windows
     - name: Build with PyInstaller (Ubuntu/macOS/Windows)
       run: |
-        pyinstaller --onefile --windowed SortingApp.py
-
-    # Windows-specific step to include the icon
-    - name: Build with PyInstaller for Windows (with icon)
-      if: matrix.os == 'windows-latest'
-      run: |
-        pyinstaller --onefile --windowed --icon=resources/sorticon.ico SortingApp.py
+        if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+          pyinstaller --onefile --windowed --icon=resources/sorticon.ico SortingApp.py
+        elif [[ ${{ matrix.os }} == 'macos-latest' ]]; then
+          pyinstaller --onefile --windowed --icon=resources/sorticon.icns SortingApp.py
+        else
+          pyinstaller --onefile --windowed --icon=resources/sorticon-256x256.png SortingApp.py
+        fi
 
     # macOS-specific step to set executable permissions and zip the .app bundle
     - name: Set permissions and zip .app for macOS
@@ -89,7 +89,7 @@ jobs:
                 python3 -m pip install --upgrade pip setuptools && \
                 python3 -m pip install --user --no-binary :all: PyQt6 && \
                 python3 -m pip install -r requirements.txt && \
-                pyinstaller --onefile --windowed SortingApp.py"
+                pyinstaller --onefile --windowed --icon=resources/sorticon-256x256.png SortingApp.py"
 
     # Upload the Red Hat-compatible build
     - name: Upload Red Hat-compatible executable
