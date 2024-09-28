@@ -47,33 +47,47 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
-    # Install dependencies on Rocky Linux 8 via Docker
     - name: Install Rocky Linux 8 dependencies and build
       if: matrix.os == 'redhat'
       uses: docker://rockylinux/rockylinux:8
       with:
         args: |
           /bin/bash -c "\
-            # Update and install EPEL repository \
+            set -e \
+            # Enable EPEL repository and update system \
             dnf install -y epel-release && \
             dnf update -y && \
+            # Install dnf-plugins-core to enable Copr \
+            dnf install -y dnf-plugins-core && \
+            # Enable Qt6 Copr repository \
+            dnf copr enable -y alexmullins/qt6 && \
             # Install Development Tools group \
             dnf groupinstall -y 'Development Tools' && \
             # Install Python 3.8 and pip \
             dnf install -y python38 python38-devel python38-pip && \
-            # Install Qt5 development packages \
-            dnf install -y qt5-qtbase-devel qt5-qttools-devel && \
-            # Upgrade pip for Python 3.8 \
+            # Install Qt6 development packages \
+            dnf install -y qt6-qtbase-devel qt6-qttools-devel && \
+            # Install missing shared libraries \
+            dnf install -y libwayland-cursor libxcb-cursor libQt6EglFsKmsSupport libQt6EglFSDeviceIntegration libgtk-3 cairo-gobject libatomic && \
+            # Verify Python installation \
+            python3.8 --version && \
+            pip3.8 --version && \
+            # Upgrade pip and setuptools \
             python3.8 -m pip install --upgrade pip setuptools && \
             # Install Python dependencies \
             python3.8 -m pip install -r requirements.txt && \
             # Install PyInstaller \
             python3.8 -m pip install pyinstaller && \
+            # Fix execution permissions for .so files \
+            chmod +x /usr/local/lib/python3.8/site-packages/PyQt6/*.so && \
             # Build the executable with PyInstaller \
             python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
             # Move the executable to the workspace's dist folder \
-            cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8"
-
+            cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8 && \
+            # Clean up \
+            dnf clean all && \
+            rm -rf /var/cache/dnf"
+            
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
       if: matrix.os != 'redhat'
