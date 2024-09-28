@@ -1,8 +1,7 @@
 import sys
+import os  # Added import os
 import random
 import time
-import atexit
-import shutil
 from PyQt6.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem,
     QVBoxLayout, QWidget, QSlider, QPushButton, QHBoxLayout,
@@ -11,6 +10,16 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, QRectF, Qt
 from PyQt6.QtGui import QIcon, QPainter, QColor, QPen, QFont
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for PyInstaller and development."""
+    if hasattr(sys, '_MEIPASS'):
+        # Running in PyInstaller bundle
+        base_path = sys._MEIPASS
+    else:
+        # Running in a normal Python environment
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class SortingVisualizer(QWidget):
     def __init__(self, parent=None, array_size=50, algorithm_name="Bubble Sort"):
@@ -97,11 +106,8 @@ class SortingVisualizer(QWidget):
 
         # Now add the buttons_layout to the main layout
         layout.addLayout(self.buttons_layout)
-
         self.setLayout(layout)
-
         self.rectangles = []
-        
         # Delay create_bars() until the widget is fully loaded
         QTimer.singleShot(0, self.create_bars)  # Ensure bars are created after loading
 
@@ -175,7 +181,7 @@ class SortingVisualizer(QWidget):
             # Once sorting is done, reset the colors and stop the timer
             self.reset_colors()
             self.timer.stop()
-            
+
             # Calculate elapsed time including delays
             elapsed_time = (time.perf_counter() - self.start_time) * 1000  # Convert to milliseconds
             self.runtime_label.setText(f"Runtime: {elapsed_time:.2f} ms")
@@ -271,7 +277,7 @@ class SortingVisualizer(QWidget):
         self.comparisons = 0
         self.accesses = 0
         self.update_labels()
-        
+
         # Record the start time
         self.start_time = time.perf_counter()
 
@@ -700,28 +706,14 @@ class MainWindow(QWidget):
         self.visualizer1.start_sorting()
         self.visualizer2.start_sorting()
 
-
-def clean_temp_dir():
-    # Check if the app is running in a PyInstaller bundle
-    if hasattr(sys, '_MEIPASS'):
-        temp_dir = sys._MEIPASS
-        try:
-            shutil.rmtree(temp_dir, ignore_errors=True)
-            print(f"Removed temp directory: {temp_dir}")
-        except Exception as e:
-            print(f"Failed to remove temp directory: {e}")
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # Set the taskbar and window icon
-    app.setWindowIcon(QIcon("resources/sorticon.ico"))
+    app.setWindowIcon(QIcon(resource_path("resources/sorticon.ico")))
 
     # Instantiate the main window with two sorting visualizers
     main_window = MainWindow()
     main_window.show()
-
-    # Clean up temp directory on exit
-    atexit.register(clean_temp_dir)
 
     sys.exit(app.exec())

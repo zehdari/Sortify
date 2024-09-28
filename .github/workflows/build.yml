@@ -45,7 +45,7 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
-    # Install dependencies for macOS and Windows using requirements.txt
+    # Install dependencies for all platforms using requirements.txt
     - name: Install dependencies (Ubuntu/macOS/Windows)
       run: |
         python -m pip install --upgrade pip
@@ -55,19 +55,19 @@ jobs:
     - name: Build with PyInstaller for Windows
       if: matrix.os == 'windows-latest'
       run: |
-        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.ico SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.ico --add-data "resources;resources" SortingApp.py
 
     # Build with PyInstaller for macOS
     - name: Build with PyInstaller for macOS
       if: matrix.os == 'macos-latest'
       run: |
-        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.icns SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.icns --add-data "resources:resources" SortingApp.py
 
     # Build with PyInstaller for Ubuntu
     - name: Build with PyInstaller for Ubuntu
       if: matrix.os == 'ubuntu-latest'
       run: |
-        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png SortingApp.py
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data "resources:resources" SortingApp.py
 
     # macOS-specific step to set executable permissions and zip the .app bundle
     - name: Set permissions and zip .app for macOS
