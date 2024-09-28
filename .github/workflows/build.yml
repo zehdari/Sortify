@@ -1,20 +1,22 @@
 name: Build Executable for Multiple Platforms
 
-on: [push]
+on:
+  push:
+    branches: [ main ]  # Trigger on pushes to the main branch
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-latest, macos-latest, windows-latest, redhat]
+    
+    runs-on: ${{ matrix.os != 'redhat' && matrix.os || 'ubuntu-latest' }}
 
     steps:
     - uses: actions/checkout@v2
 
     # Set up Python for all platforms
-    - name: Set up Python (Ubuntu/macOS/Windows)
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
@@ -45,8 +47,24 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
+    # Install dependencies on Red Hat via Docker
+    - name: Install Red Hat dependencies and build
+      if: matrix.os == 'redhat'
+      uses: docker://centos:8
+      with:
+        args: |
+          /bin/bash -c "\
+            yum install -y epel-release && \
+            yum groupinstall -y 'Development Tools' && \
+            yum install -y python3 python3-pip gcc make qt5-qtbase-devel pyinstaller && \
+            pip3 install --upgrade pip && \
+            pip3 install -r requirements.txt && \
+            pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
+            cp dist/Sortify /github/workspace/dist/Sortify-redhat"
+
     # Install dependencies for all platforms using requirements.txt
-    - name: Install dependencies (Ubuntu/macOS/Windows)
+    - name: Install Python dependencies
+      if: matrix.os != 'redhat'
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -77,18 +95,18 @@ jobs:
         cd dist
         zip -r Sortify-macOS.zip Sortify.app
 
-    # Upload only the .zip file for macOS
-    - name: Upload macOS zip
-      if: matrix.os == 'macos-latest'
-      uses: actions/upload-artifact@v3
-      with:
-        name: executable-macos
-        path: dist/Sortify-macOS.zip
-
-    # Upload all files for Ubuntu and Windows builds
-    - name: Upload executable (Native Builds)
-      if: matrix.os != 'macos-latest'
+    # Upload artifacts for each platform
+    - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
-        path: dist/*
+        path: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            dist/Sortify.exe
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            dist/Sortify-macOS.zip
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            dist/Sortify
+          elif [ "${{ matrix.os }}" == "redhat" ]; then
+            dist/Sortify-redhat
+          fi
