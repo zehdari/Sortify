@@ -417,13 +417,11 @@ class QChartWindow(QWidget):
 
     def save_graph(self):
         # Open a file dialog to save the image
-        options = QFileDialog.Options()
         filename, _ = QFileDialog.getSaveFileName(
             self,
             "Save Graph As",
             "",
             "PNG Files (*.png);;JPEG Files (*.jpg);;All Files (*)",
-            options=options
         )
         if filename:
             pixmap = self.chart_view.grab()

@@ -50,7 +50,7 @@ jobs:
     # Install dependencies on Red Hat via Docker
     - name: Install Red Hat dependencies and build
       if: matrix.os == 'redhat'
-      uses: docker://centos:8
+      uses: docker://centos:stream8
       with:
         args: |
           /bin/bash -c "\
@@ -62,7 +62,7 @@ jobs:
             pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
             cp dist/Sortify /github/workspace/dist/Sortify-redhat"
 
-    # Install dependencies for all platforms using requirements.txt
+    # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
       if: matrix.os != 'redhat'
       run: |
@@ -95,18 +95,18 @@ jobs:
         cd dist
         zip -r Sortify-macOS.zip Sortify.app
 
-    # Upload artifacts for each platform
-    - name: Upload artifacts
+    # Upload artifacts for macOS (only the zip file)
+    - name: Upload macOS zip
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable-macos
+        path: dist/Sortify-macOS.zip
+
+    # Upload artifacts for other platforms (Windows, Ubuntu, Red Hat)
+    - name: Upload executables
+      if: matrix.os != 'macos-latest'
       uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
-        path: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            dist/Sortify.exe
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            dist/Sortify-macOS.zip
-          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            dist/Sortify
-          elif [ "${{ matrix.os }}" == "redhat" ]; then
-            dist/Sortify-redhat
-          fi
+        path: dist/*
