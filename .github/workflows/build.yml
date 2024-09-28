@@ -47,7 +47,6 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
-    # Install dependencies on Rocky Linux 8 via Docker
     - name: Install Rocky Linux 8 dependencies and build
       if: matrix.os == 'redhat'
       uses: docker://rockylinux/rockylinux:8
@@ -56,6 +55,7 @@ jobs:
           /bin/bash -c "\
             # Update and install EPEL repository \
             dnf install -y epel-release && \
+            dnf config-manager --set-enabled powertools && \
             dnf update -y && \
             # Install Development Tools group \
             dnf groupinstall -y 'Development Tools' && \
@@ -63,7 +63,8 @@ jobs:
             dnf install -y python38 python38-devel python38-pip && \
             # Install Qt5 development packages \
             dnf install -y qt5-qtbase-devel qt5-qttools-devel && \
-            dnf install -y libwayland-cursor libxcb-cursor libwayland-egl libatomic libgdk-3 libgtk-3 cairo-gobject && \
+            # Install missing GTK and XCB dependencies \
+            dnf install -y xcb-util-cursor gtk3 cairo-gobject && \
             # Upgrade pip for Python 3.8 \
             python3.8 -m pip install --upgrade pip setuptools && \
             # Install Python dependencies \
