@@ -13,24 +13,32 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    # Set up Python for Ubuntu, macOS, and Windows
     - name: Set up Python (Ubuntu/macOS/Windows)
-      if: matrix.os != 'ubuntu-latest'
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
 
+    # Install dependencies and PyInstaller for Ubuntu, macOS, and Windows
     - name: Install dependencies (Ubuntu/macOS/Windows)
-      if: matrix.os != 'ubuntu-latest'
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
 
+    # Build with PyInstaller for Ubuntu, macOS, and Windows
     - name: Build with PyInstaller (Ubuntu/macOS/Windows)
-      if: matrix.os != 'ubuntu-latest'
       run: |
         pyinstaller --onefile --windowed SortingApp.py
 
-    - name: Build for Red Hat using Docker on Ubuntu
+    # Upload the native Ubuntu/macOS/Windows builds
+    - name: Upload executable (Native Builds)
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable-${{ matrix.os }}
+        path: dist/*
+
+    # Additional step: Build for Red Hat using Docker on Ubuntu
+    - name: Build for Red Hat-compatible (via Docker)
       if: matrix.os == 'ubuntu-latest'
       run: |
         docker run --rm -v ${{ github.workspace }}:/src -w /src almalinux:8 \
@@ -39,8 +47,10 @@ jobs:
                  python3 -m pip install pyinstaller && \
                  pyinstaller --onefile --windowed SortingApp.py"
 
-    - name: Upload executable
+    # Upload the Red Hat-compatible build
+    - name: Upload Red Hat-compatible executable
+      if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v3
       with:
-        name: executable
+        name: executable-redhat
         path: dist/*
