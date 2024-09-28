@@ -55,8 +55,7 @@ jobs:
     - name: Build with PyInstaller for Windows
       if: matrix.os == 'windows-latest'
       run: |
-        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.ico SortingApp.py --runtime-tmpdir=%TEMP%\sortify_temp
-
+        pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon.ico SortingApp.py
 
     # Build with PyInstaller for macOS
     - name: Build with PyInstaller for macOS

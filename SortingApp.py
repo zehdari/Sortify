@@ -1,7 +1,7 @@
 import sys
 import random
 import time
-import tempfile
+import atexit
 import shutil
 from PyQt6.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem,
@@ -700,6 +700,17 @@ class MainWindow(QWidget):
         self.visualizer1.start_sorting()
         self.visualizer2.start_sorting()
 
+
+def clean_temp_dir():
+    # Check if the app is running in a PyInstaller bundle
+    if hasattr(sys, '_MEIPASS'):
+        temp_dir = sys._MEIPASS
+        try:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print(f"Removed temp directory: {temp_dir}")
+        except Exception as e:
+            print(f"Failed to remove temp directory: {e}")
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -711,10 +722,6 @@ if __name__ == '__main__':
     main_window.show()
 
     # Clean up temp directory on exit
-    temp_dir = tempfile.gettempdir()
-    try:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-    except Exception as e:
-        print(f"Failed to remove temp directory: {e}")
+    atexit.register(clean_temp_dir)
 
     sys.exit(app.exec())
