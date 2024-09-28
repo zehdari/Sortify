@@ -30,6 +30,12 @@ jobs:
       run: |
         pyinstaller --onefile --windowed SortingApp.py
 
+    # macOS-specific step to set executable permissions
+    - name: Set permissions for macOS app
+      if: matrix.os == 'macos-latest'
+      run: |
+        chmod +x dist/SortingApp.app/Contents/MacOS/SortingApp
+
     # Upload the native Ubuntu/macOS/Windows builds
     - name: Upload executable (Native Builds)
       uses: actions/upload-artifact@v3
