@@ -73,8 +73,6 @@ jobs:
             python3.8 -m pip install pyinstaller && \
             # Build the executable with PyInstaller \
             python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
-            # Move the executable to the workspace's dist folder \
-            cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8"
 
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
@@ -116,6 +114,12 @@ jobs:
       with:
         name: executable-macos
         path: dist/Sortify-macOS.zip
+
+    # Set execute permissions for Rocky Linux 8 executable
+    - name: Set execute permissions for Rocky Linux 8 executable
+      if: matrix.os == 'redhat'
+      run: |
+        chmod +x dist/Sortify
 
     # Upload artifacts for other platforms (Windows, Ubuntu, Red Hat)
     - name: Upload executables
