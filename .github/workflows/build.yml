@@ -83,7 +83,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: executable-macos
-        path: dist/SortingApp-macOS.zip
+        path: dist/Sortify-macOS.zip
 
     # Upload all files for Ubuntu and Windows builds
     - name: Upload executable (Native Builds)
