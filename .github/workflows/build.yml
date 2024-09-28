@@ -47,7 +47,7 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
-    # Install dependencies on Rocky Linux 8 via Docker
+    # Install dependencies on Rocky Linux 8 via Docker with Python 3.8 and Qt6
     - name: Install Rocky Linux 8 dependencies and build
       if: matrix.os == 'redhat'
       uses: docker://rockylinux/rockylinux:8
@@ -62,8 +62,8 @@ jobs:
             dnf groupinstall -y 'Development Tools' && \
             # Install Python 3.8 and pip \
             dnf install -y python38 python38-devel python38-pip && \
-            # Install wget and tar for downloading Qt6 \
-            dnf install -y wget tar && \
+            # Install wget, tar, cmake, and other build dependencies \
+            dnf install -y wget tar cmake libglvnd-devel mesa-libGL-devel libxcb-devel libxkbcommon-devel && \
             # Create directory for Qt6 installation \
             mkdir -p /opt/qt6 && \
             cd /opt/qt6 && \
@@ -98,6 +98,7 @@ jobs:
             # Clean up \
             dnf clean all && \
             rm -rf /var/cache/dnf /opt/qt6"
+
 
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
