@@ -370,6 +370,8 @@ class QChartWindow(QWidget):
         self.chart.addSeries(self.series)
         self.chart.setTitle(f"Benchmark of {algorithm_name}")
 
+        self.chart.legend().hide()
+
         # Customize axes
         axis_x = QValueAxis()
         axis_x.setTitleText("Array Size (n)")
