@@ -51,7 +51,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Build with PyInstaller for Windows
+    # Steps to modify and build PyInstaller bootloader on Windows
+    - name: Clone PyInstaller and modify bootloader for Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        git clone https://github.com/pyinstaller/pyinstaller.git
+        cd pyinstaller/bootloader/src
+        sed -i '398iSetDllDirectoryW(NULL);' pyi_main.c
+
+    - name: Build PyInstaller bootloader on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cd pyinstaller/bootloader
+        python ./waf all --target-platform=windows
+
+    - name: Install custom PyInstaller on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        cd pyinstaller
+        pip install .
+
+    # Build with PyInstaller for Windows using the custom-built bootloader
     - name: Build with PyInstaller for Windows
       if: matrix.os == 'windows-latest'
       run: |
