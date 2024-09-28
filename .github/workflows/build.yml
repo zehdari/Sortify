@@ -19,11 +19,11 @@ jobs:
       with:
         python-version: '3.x'
 
-    # Install dependencies and PyInstaller for Ubuntu, macOS, and Windows
+    # Install dependencies and PyInstaller for Ubuntu, macOS, and Windows using requirements.txt
     - name: Install dependencies (Ubuntu/macOS/Windows)
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller
+        pip install -r requirements.txt
 
     # Build with PyInstaller for Ubuntu, macOS, and Windows
     - name: Build with PyInstaller (Ubuntu/macOS/Windows)
@@ -37,14 +37,14 @@ jobs:
         name: executable-${{ matrix.os }}
         path: dist/*
 
-    # Additional step: Build for Red Hat using Docker on Ubuntu
+    # Additional step: Build for Red Hat-compatible (via Docker) on Ubuntu
     - name: Build for Red Hat-compatible (via Docker)
       if: matrix.os == 'ubuntu-latest'
       run: |
         docker run --rm -v ${{ github.workspace }}:/src -w /src almalinux:8 \
         bash -c "yum install -y python3 python3-devel gcc zlib-devel && \
                  python3 -m pip install wheel && \
-                 python3 -m pip install pyinstaller && \
+                 python3 -m pip install -r requirements.txt && \
                  pyinstaller --onefile --windowed SortingApp.py"
 
     # Upload the Red Hat-compatible build
