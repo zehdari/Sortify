@@ -54,12 +54,24 @@ jobs:
       with:
         args: |
           /bin/bash -c "\
+            # Update and install EPEL repository \
             dnf install -y epel-release && \
+            dnf update -y && \
+            # Install Development Tools group \
             dnf groupinstall -y 'Development Tools' && \
-            dnf install -y python3 python3-pip gcc make qt5-qtbase-devel && \
-            pip3 install --upgrade pip && \
-            pip3 install -r requirements.txt && \
-            pyinstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
+            # Install Python 3.8 and pip \
+            dnf install -y python38 python38-devel python38-pip && \
+            # Install Qt5 development packages \
+            dnf install -y qt5-qtbase-devel qt5-qttools-devel && \
+            # Upgrade pip for Python 3.8 \
+            python3.8 -m pip install --upgrade pip setuptools && \
+            # Install Python dependencies \
+            python3.8 -m pip install -r requirements.txt && \
+            # Install PyInstaller \
+            python3.8 -m pip install pyinstaller && \
+            # Build the executable with PyInstaller \
+            python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
+            # Move the executable to the workspace's dist folder \
             cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8"
 
     # Install dependencies for all platforms except Red Hat using requirements.txt
