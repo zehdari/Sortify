@@ -47,14 +47,13 @@ jobs:
           qt5-qmake \
           qtbase5-dev-tools
 
-    # Install dependencies on Rocky Linux 8 via Docker with Python 3.8 and Qt6
+    # Install dependencies on Rocky Linux 8 via Docker
     - name: Install Rocky Linux 8 dependencies and build
       if: matrix.os == 'redhat'
       uses: docker://rockylinux/rockylinux:8
       with:
         args: |
           /bin/bash -c "\
-            set -e \
             # Update and install EPEL repository \
             dnf install -y epel-release && \
             dnf update -y && \
@@ -62,26 +61,8 @@ jobs:
             dnf groupinstall -y 'Development Tools' && \
             # Install Python 3.8 and pip \
             dnf install -y python38 python38-devel python38-pip && \
-            # Install wget, tar, cmake, and other build dependencies \
-            dnf install -y wget tar cmake libglvnd-devel mesa-libGL-devel libxcb-devel libxkbcommon-devel && \
-            # Create directory for Qt6 installation \
-            mkdir -p /opt/qt6 && \
-            cd /opt/qt6 && \
-            # Download Qt6 (replace the URL with the desired Qt6 version) \
-            wget https://download.qt.io/official_releases/qt/6.5/6.5.0/single/qt-everywhere-src-6.5.0.tar.xz && \
-            # Extract the downloaded archive \
-            tar -xf qt-everywhere-src-6.5.0.tar.xz && \
-            cd qt-everywhere-src-6.5.0 && \
-            # Configure the Qt6 build (minimal configuration to speed up the build) \
-            ./configure -prefix /opt/qt6/6.5.0 -opensource -confirm-license -nomake examples -nomake tests -skip qtwebengine && \
-            # Compile and install Qt6 \
-            make -j$(nproc) && \
-            make install && \
-            # Add Qt6 to PATH \
-            export PATH=/opt/qt6/6.5.0/bin:$PATH && \
-            # Verify qmake installation \
-            qmake --version && \
-            # Install missing shared libraries \
+            # Install Qt5 development packages \
+            dnf install -y qt5-qtbase-devel qt5-qttools-devel && \
             dnf install -y libwayland-cursor libxcb-cursor libwayland-egl libatomic libgdk-3 libgtk-3 cairo-gobject && \
             # Upgrade pip for Python 3.8 \
             python3.8 -m pip install --upgrade pip setuptools && \
@@ -89,16 +70,10 @@ jobs:
             python3.8 -m pip install -r requirements.txt && \
             # Install PyInstaller \
             python3.8 -m pip install pyinstaller && \
-            # Fix execution permissions for .so files \
-            chmod +x /usr/local/lib/python3.8/site-packages/PyQt6/*.so && \
             # Build the executable with PyInstaller \
             python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
             # Move the executable to the workspace's dist folder \
-            cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8 && \
-            # Clean up \
-            dnf clean all && \
-            rm -rf /var/cache/dnf /opt/qt6"
-
+            cp dist/Sortify /github/workspace/dist/Sortify-rocky-linux8"
 
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
