@@ -718,6 +718,8 @@ class MainWindow(QWidget):
         # Close child SortingVisualizer instances
         self.visualizer1.close()
         self.visualizer2.close()
+        # Ensure the application quits completely
+        QApplication.quit()
         event.accept()  # Allow the window to close
 
 if __name__ == '__main__':
