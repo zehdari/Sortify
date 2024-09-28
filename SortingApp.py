@@ -731,5 +731,6 @@ if __name__ == '__main__':
     # Instantiate the main window with two sorting visualizers
     main_window = MainWindow()
     main_window.show()
+    app.quit()
 
     sys.exit(app.exec())
