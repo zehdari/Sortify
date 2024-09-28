@@ -1,0 +1,7 @@
+venv
+media
+sorting_visualizer.app
+dist
+build
+tools
+__pycache__
