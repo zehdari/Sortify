@@ -19,8 +19,35 @@ jobs:
       with:
         python-version: '3.x'
 
-    # Install dependencies and PyInstaller for Ubuntu, macOS, and Windows using requirements.txt
-    - name: Install dependencies (Ubuntu/macOS/Windows)
+    # Install dependencies on Ubuntu
+    - name: Install Ubuntu dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libxkbcommon-x11-0 \
+          libxcb-shape0 \
+          libxcb-xfixes0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-render-util0 \
+          libxcb-cursor0 \
+          libxcb-xkb1 \
+          libxcb-randr0 \
+          libxkbcommon0 \
+          libxcb-render0 \
+          libxrender1 \
+          libgl1-mesa-glx \
+          build-essential \
+          qtbase5-dev \
+          qtchooser \
+          qt5-qmake \
+          qtbase5-dev-tools
+
+    # Install dependencies for macOS and Windows using requirements.txt
+    - name: Install dependencies (macOS/Windows)
+      if: matrix.os != 'ubuntu-latest'
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -48,7 +75,7 @@ jobs:
           dist/*.exe
           dist/*.AppImage
 
-    # Additional step: Build for Red Hat-compatible (via Docker) on Ubuntu
+    # Additional step: Build for Rocky Linux-compatible (via Docker) on Ubuntu
     - name: Build for Rocky Linux-compatible (via Docker)
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -58,7 +85,7 @@ jobs:
                 python3 -m pip install wheel && \
                 python3 -m pip install --upgrade pip setuptools && \
                 export PATH=/usr/lib64/qt5/bin:$PATH && \
-                python3 -m pip install PyQt6==6.4.0 && \
+                python3 -m pip install --user --no-binary :all: PyQt6 && \
                 python3 -m pip install -r requirements.txt && \
                 pyinstaller --onefile --windowed SortingApp.py"
 
