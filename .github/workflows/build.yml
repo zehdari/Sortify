@@ -34,7 +34,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         docker run --rm -v ${{ github.workspace }}:/src -w /src almalinux:8 \
-        bash -c "yum install -y python3 python3-devel gcc && \
+        bash -c "yum install -y python3 python3-devel gcc zlib-devel && \
                  python3 -m pip install wheel && \
                  python3 -m pip install pyinstaller && \
                  pyinstaller --onefile --windowed SortingApp.py"
