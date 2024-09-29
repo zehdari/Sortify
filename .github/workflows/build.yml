@@ -118,12 +118,6 @@ jobs:
         name: executable-macos
         path: dist/Sortify-macOS.zip
 
-    # Set execute permissions for Rocky Linux 8 executable
-    - name: Set execute permissions for Rocky Linux 8 executable
-      if: matrix.os == 'redhat'
-      run: |
-        chmod +x dist/Sortify
-
     # Upload artifacts for other platforms (Windows, Ubuntu, Red Hat)
     - name: Upload executables
       if: matrix.os != 'macos-latest'
