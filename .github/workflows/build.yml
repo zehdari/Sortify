@@ -74,9 +74,7 @@ jobs:
             # Build the executable with PyInstaller \
             python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
             # Set permissions for executable \
-            chmod +x dist/Sortify && \
-            # Create a tarball to preserve permissions \
-            tar -czvf dist/Sortify.tar.gz -C dist Sortify"
+            chmod +x dist/Sortify 
         options: --user root
 
 
@@ -121,18 +119,10 @@ jobs:
         name: executable-macos
         path: dist/Sortify-macOS.zip
 
-    # Upload artifacts for RedHat (only tarball)
-    - name: Upload executables
-      if: matrix.os == 'redhat'
-      uses: actions/upload-artifact@v3
-      with:
-        name: executable-redhat
-        path: dist/Sortify.tar.gz
-
 
     # Upload artifacts for other platforms (Windows, Ubuntu, Red Hat)
     - name: Upload executables
-      if: matrix.os != 'macos-latest' && matrix.os != 'redhat'
+      if: matrix.os != 'macos-latest'
       uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
