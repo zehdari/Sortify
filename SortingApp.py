@@ -326,9 +326,7 @@ class SortingVisualizer(QWidget):
                 start_time = time.perf_counter()
 
                 # Run the sorting algorithm without visualization
-                sort_generator = sorting_function(arr_copy)
-                for _ in sort_generator:
-                    pass  # We don't need to process the steps
+                sorting_function(arr_copy)
 
                 end_time = time.perf_counter()
                 elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds with decimals
