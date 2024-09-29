@@ -52,7 +52,7 @@ jobs:
       uses: docker://rockylinux/rockylinux:8
       with:
         args: |
-            --privileged /bin/bash -c "\
+            /bin/bash -c "\
             # Update and install EPEL repository \
             dnf install -y epel-release && \
             dnf config-manager --set-enabled powertools && \
@@ -75,6 +75,7 @@ jobs:
             python3.8 -m PyInstaller --onefile --windowed --name=Sortify --icon=resources/sorticon-256x256.png --add-data 'resources:resources' SortingApp.py && \
             # Set permissions for executable \
             chmod +x dist/Sortify
+        options: --user root
             
     # Install dependencies for all platforms except Red Hat using requirements.txt
     - name: Install Python dependencies
