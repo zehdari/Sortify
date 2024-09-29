@@ -121,9 +121,18 @@ jobs:
         name: executable-macos
         path: dist/Sortify-macOS.zip
 
+    # Upload artifacts for RedHat (only tarball)
+    - name: Upload executables
+      if: matrix.os == 'redhat'
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable-redhat
+        path: dist/Sortify.tar.gz
+
+
     # Upload artifacts for other platforms (Windows, Ubuntu, Red Hat)
     - name: Upload executables
-      if: matrix.os != 'macos-latest'
+      if: matrix.os != 'macos-latest' && matrix.os != 'redhat'
       uses: actions/upload-artifact@v3
       with:
         name: executable-${{ matrix.os }}
