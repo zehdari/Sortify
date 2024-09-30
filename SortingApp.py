@@ -516,7 +516,7 @@ class MainWindow(QWidget):
             step_size = 1
             self.benchmark_step_size_input.setText(str(step_size))
 
-        sizes = list(range(10, max_size + 1, step_size))
+        sizes = list(range(0, max_size + 1, step_size))
         runtimes_dict = {algo: [] for algo in selected_algorithms}
 
         for algo_name in selected_algorithms:
