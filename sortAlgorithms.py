@@ -1,22 +1,40 @@
-def get_algorithm_by_name(name):
-    if name == "Bubble Sort":
-        return bubble_sort
-    elif name == "Selection Sort":
-        return selection_sort
-    elif name == "Insertion Sort":
-        return insertion_sort
-    elif name == "Merge Sort":
-        return merge_sort
-    elif name == "Quick Sort":
-        return quick_sort
-    elif name == "Heap Sort":
-        return heap_sort
-    elif name == "Shell Sort":
-        return shell_sort
-    elif name == "Cocktail Sort":
-        return cocktail_sort
+# Sorting algorithm retrieval
+def get_algorithm_by_name(name, use_yield=True):
+    if use_yield:
+        if name == "Bubble Sort":
+            return bubble_sort
+        elif name == "Selection Sort":
+            return selection_sort
+        elif name == "Insertion Sort":
+            return insertion_sort
+        elif name == "Merge Sort":
+            return merge_sort
+        elif name == "Quick Sort":
+            return quick_sort
+        elif name == "Heap Sort":
+            return heap_sort
+        elif name == "Shell Sort":
+            return shell_sort
+        elif name == "Cocktail Sort":
+            return cocktail_sort
     else:
-        return bubble_sort 
+        if name == "Bubble Sort":
+            return bubble_sort_no_yield
+        elif name == "Selection Sort":
+            return selection_sort_no_yield
+        elif name == "Insertion Sort":
+            return insertion_sort_no_yield
+        elif name == "Merge Sort":
+            return merge_sort_no_yield
+        elif name == "Quick Sort":
+            return quick_sort_no_yield
+        elif name == "Heap Sort":
+            return heap_sort_no_yield
+        elif name == "Shell Sort":
+            return shell_sort_no_yield
+        elif name == "Cocktail Sort":
+            return cocktail_sort_no_yield
+    return bubble_sort_no_yield  # Default
 
 # Sorting algorithm implementations
 
@@ -207,3 +225,130 @@ def cocktail_sort(arr):
                 yield i, i + 1, True, 4  # Swap occurred
                 swapped = True
         start += 1
+
+
+
+def bubble_sort_no_yield(arr):
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+
+def selection_sort_no_yield(arr):
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        if min_idx != i:
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr
+
+def insertion_sort_no_yield(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr
+
+def merge_sort_no_yield(arr):
+    if len(arr) > 1:
+        mid = len(arr) // 2
+        L = arr[:mid]
+        R = arr[mid:]
+        merge_sort_no_yield(L)
+        merge_sort_no_yield(R)
+        i = j = k = 0
+        while i < len(L) and j < len(R):
+            if L[i] < R[j]:
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
+    return arr
+
+def quick_sort_no_yield(arr):
+    if len(arr) <= 1:
+        return arr
+    else:
+        pivot = arr[len(arr) // 2]
+        left = [x for x in arr if x < pivot]
+        middle = [x for x in arr if x == pivot]
+        right = [x for x in arr if x > pivot]
+        return quick_sort_no_yield(left) + middle + quick_sort_no_yield(right)
+
+def heap_sort_no_yield(arr):
+    def heapify(arr, n, i):
+        largest = i
+        l = 2 * i + 1
+        r = 2 * i + 2
+        if l < n and arr[i] < arr[l]:
+            largest = l
+        if r < n and arr[largest] < arr[r]:
+            largest = r
+        if largest != i:
+            arr[i], arr[largest] = arr[largest], arr[i]
+            heapify(arr, n, largest)
+    n = len(arr)
+    for i in range(n//2, -1, -1):
+        heapify(arr, n, i)
+    for i in range(n-1, 0, -1):
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify(arr, i, 0)
+    return arr
+
+def shell_sort_no_yield(arr):
+    n = len(arr)
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+            arr[j] = temp
+        gap //= 2
+    return arr
+
+def cocktail_sort_no_yield(arr):
+    n = len(arr)
+    swapped = True
+    start = 0
+    end = n - 1
+    while swapped:
+        swapped = False
+        for i in range(start, end):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+        if not swapped:
+            break
+        swapped = False
+        end -= 1
+        for i in range(end - 1, start - 1, -1):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+        start += 1
+    return arr

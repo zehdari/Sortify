@@ -62,7 +62,6 @@ class SortingVisualizer(QWidget):
             "Heap Sort",
             "Shell Sort",
             "Cocktail Sort"
-            # You can add more algorithms here
         ])
         self.algorithm_dropdown.setCurrentText(algorithm_name)
         self.algorithm_dropdown.currentIndexChanged.connect(self.change_sorting_algorithm)
@@ -521,7 +520,7 @@ class MainWindow(QWidget):
         runtimes_dict = {algo: [] for algo in selected_algorithms}
 
         for algo_name in selected_algorithms:
-            sorting_function = get_algorithm_by_name(algo_name)
+            sorting_function = get_algorithm_by_name(algo_name, False)
             for size in sizes:
                 arr = random.sample(range(size), size)
                 arr_copy = arr.copy()
