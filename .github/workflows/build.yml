@@ -116,7 +116,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       uses: actions/upload-artifact@v3
       with:
-        name: executable-macos
+        name: Sortify-macos
         path: dist/Sortify-macOS.zip
 
 
@@ -125,5 +125,5 @@ jobs:
       if: matrix.os != 'macos-latest'
       uses: actions/upload-artifact@v3
       with:
-        name: executable-${{ matrix.os }}
+        name: Sortify-${{ matrix.os }}
         path: dist/*
