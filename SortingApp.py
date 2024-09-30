@@ -1,5 +1,5 @@
 import sys
-import os  # Added import os
+import os
 import random
 import time
 from PyQt6.QtWidgets import (
@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer, QRectF, Qt
 from PyQt6.QtGui import QIcon, QPainter, QColor, QPen, QFont
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
+
+from sortAlgorithms import *
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for PyInstaller and development."""
@@ -31,8 +33,8 @@ class SortingVisualizer(QWidget):
         # Initialize counters
         self.comparisons = 0
         self.accesses = 0
-        self.timer_interval = 0  # Default delay in milliseconds
-        self.steps_per_call = 1    # Default steps per call
+        self.timer_interval = 0  # Default timer interval in ms
+        self.steps_per_call = 1  
 
         # Initialize sorting algorithm
         self.sorting_algorithm = get_algorithm_by_name(algorithm_name)
@@ -43,7 +45,7 @@ class SortingVisualizer(QWidget):
         self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.view.setMinimumWidth(300)  # Set a minimum width for better display
+        self.view.setMinimumWidth(300)
 
         # Create layout and add view
         layout = QVBoxLayout()
@@ -58,7 +60,8 @@ class SortingVisualizer(QWidget):
             "Merge Sort",
             "Quick Sort",
             "Heap Sort",
-            "Shell Sort"
+            "Shell Sort",
+            "Cocktail Sort"
             # You can add more algorithms here
         ])
         self.algorithm_dropdown.setCurrentText(algorithm_name)
@@ -83,32 +86,49 @@ class SortingVisualizer(QWidget):
         self.sort_button.clicked.connect(self.start_sorting)
         self.buttons_layout.addWidget(self.sort_button)
 
-        # Note: Removed Benchmark button and related inputs from SortingVisualizer
-
         # Now add the buttons_layout to the main layout
         layout.addLayout(self.buttons_layout)
         self.setLayout(layout)
         self.rectangles = []
         # Delay create_bars() until the widget is fully loaded
-        QTimer.singleShot(0, self.create_bars)  # Ensure bars are created after loading
+        QTimer.singleShot(0, self.create_bars) 
 
         # Set up a QTimer for smooth animation
         self.timer = QTimer()
         self.timer.timeout.connect(self.visualize_step)
+        self.timer.setInterval(self.timer_interval)
 
-        # Initialize green_fill_timer to None
-        self.green_fill_timer = None  # **Added Initialization**
+        # Initialize green_fill_timer to None 
+        self.green_fill_timer = None 
+
+        # Define total duration for green fill
+        self.green_fill_total_duration = 2000  # in milliseconds
+
+        # Define desired timer interval for green fill
+        self.green_fill_timer_interval = 30  # in milliseconds
+
+        # Calculate steps_per_tick based on array size
+        self.calculate_green_fill_parameters()
 
         # Track previously highlighted indices
         self.previous_highlighted_indices = []
 
+    def calculate_green_fill_parameters(self):
+        """
+        Calculate steps_per_tick to ensure the green fill animation completes
+        within the total_duration regardless of array size.
+        """
+        num_bars = len(self.arr)
+        max_ticks = self.green_fill_total_duration / self.green_fill_timer_interval
+        self.steps_per_tick = max(1, num_bars // int(max_ticks)) if max_ticks > 0 else 1
+
+    # Create bars based on the array and current window size.
     def create_bars(self):
-        """Create bars based on the array and current window size."""
         # Stop the green fill timer if it's active
-        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():
             self.green_fill_timer.stop()
-            self.green_fill_timer = None  # Remove reference
-            self.reset_colors()  # Reset colors to default
+            self.green_fill_timer = None 
+            self.reset_colors() 
 
         scene_width = self.view.viewport().width()
         scene_height = self.view.viewport().height()
@@ -130,10 +150,10 @@ class SortingVisualizer(QWidget):
             self.scene.addItem(rect_item)
             self.rectangles.append(rect_item)
 
+    # Recreate bars when the window is resized
     def resizeEvent(self, event):
-        """Handle resizing of the window to update the bars properly."""
         super().resizeEvent(event)
-        self.create_bars()  # Recreate bars when the window is resized
+        self.create_bars()  
 
     def visualize_step(self):
         try:
@@ -173,7 +193,7 @@ class SortingVisualizer(QWidget):
             self.timer.stop()
 
             # Calculate elapsed time including delays
-            elapsed_time = (time.perf_counter() - self.start_time) * 1000  # Convert to milliseconds
+            elapsed_time = (time.perf_counter() - self.start_time) * 1000 
             self.runtime_label.setText(f"Runtime: {elapsed_time:.2f} ms")
 
             # Start the green fill animation
@@ -185,29 +205,35 @@ class SortingVisualizer(QWidget):
 
     def start_green_fill_animation(self):
         """Start the animation to turn bars green from smallest to largest."""
-        total_duration = 2000  # Total duration in milliseconds
-        num_bars = len(self.arr)
-        delay_between_bars = total_duration / num_bars
-
-        # Ensure delay is at least 1 ms
-        delay_between_bars = max(1, delay_between_bars)
+        # Stop the green fill timer if it's active
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():
+            self.green_fill_timer.stop()
+            self.green_fill_timer = None 
+            self.reset_colors() 
 
         # Sort indices based on the values in arr (from smallest to largest)
-        self.green_fill_indices = sorted(range(num_bars), key=lambda i: self.arr[i])
+        self.green_fill_indices = sorted(range(len(self.arr)), key=lambda i: self.arr[i])
         self.current_green_index = 0
 
+        # Recalculate steps_per_tick in case array size has changed
+        self.calculate_green_fill_parameters()
+
+        # Initialize the green_fill_timer with a separate QTimer instance
         self.green_fill_timer = QTimer()
         self.green_fill_timer.timeout.connect(self.green_fill_step)
-        self.green_fill_timer.start(int(delay_between_bars))
+        self.green_fill_timer.start(self.green_fill_timer_interval)
 
     def green_fill_step(self):
+        """Update multiple bars per timer tick based on steps_per_tick."""
         if self.current_green_index < len(self.green_fill_indices):
-            index = self.green_fill_indices[self.current_green_index]
-            self.rectangles[index].setBrush(QColor('green'))
-            self.current_green_index += 1
+            end_index = min(self.current_green_index + self.steps_per_tick, len(self.green_fill_indices))
+            for idx in range(self.current_green_index, end_index):
+                index = self.green_fill_indices[idx]
+                self.rectangles[index].setBrush(QColor('green'))
+            self.current_green_index = end_index
         else:
             self.green_fill_timer.stop()
-            self.green_fill_timer = None  # Remove reference
+            self.green_fill_timer = None
 
     def update_bar(self, index, value):
         scene_height = self.view.viewport().height()
@@ -235,6 +261,8 @@ class SortingVisualizer(QWidget):
         self.arr = random.sample(range(1, self.array_size + 1), self.array_size)
         self.max_value = max(self.arr)
         self.create_bars()
+        # Recalculate green fill parameters when array size changes
+        self.calculate_green_fill_parameters()
 
     def set_timer_interval(self, interval):
         self.timer_interval = interval
@@ -245,9 +273,9 @@ class SortingVisualizer(QWidget):
 
     def shuffle_array(self, arr=None):
         self.timer.stop()
-        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  
             self.green_fill_timer.stop()
-            self.green_fill_timer = None  # Remove reference
+            self.green_fill_timer = None 
 
         if arr is None:
             self.arr = random.sample(range(1, self.array_size + 1), self.array_size)
@@ -260,9 +288,12 @@ class SortingVisualizer(QWidget):
         # Reset highlighted indices
         self.previous_highlighted_indices = []
 
+        # Recalculate green fill parameters after shuffling
+        self.calculate_green_fill_parameters()
+
     def start_sorting(self):
         self.timer.stop()
-        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  
             self.green_fill_timer.stop()
             self.green_fill_timer = None  # Remove reference
 
@@ -284,8 +315,6 @@ class SortingVisualizer(QWidget):
         selected_algorithm = self.algorithm_dropdown.currentText()
         self.sorting_algorithm = get_algorithm_by_name(selected_algorithm)
 
-    # Removed run_benchmark and perform_benchmark from SortingVisualizer
-
     def closeEvent(self, event):
         # Stop the main visualization timer
         if self.timer.isActive():
@@ -296,187 +325,6 @@ class SortingVisualizer(QWidget):
             self.green_fill_timer.stop()
 
         event.accept()  # Allow the window to close
-
-def get_algorithm_by_name(name):
-    if name == "Bubble Sort":
-        return bubble_sort
-    elif name == "Selection Sort":
-        return selection_sort
-    elif name == "Insertion Sort":
-        return insertion_sort
-    elif name == "Merge Sort":
-        return merge_sort
-    elif name == "Quick Sort":
-        return quick_sort
-    elif name == "Heap Sort":
-        return heap_sort
-    elif name == "Shell Sort":
-        return shell_sort
-    else:
-        return bubble_sort  # Default to Bubble Sort
-
-# Sorting algorithm implementations
-
-def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        swapped = False
-        for j in range(0, n - i - 1):
-            yield j, j + 1, False, 2  # Comparison
-            if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-                yield j, j + 1, True, 4  # Swap happened
-                swapped = True
-        if not swapped:
-            break
-
-def selection_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        min_idx = i
-        for j in range(i + 1, n):
-            yield min_idx, j, False, 2  # Comparison
-            if arr[j] < arr[min_idx]:
-                min_idx = j
-        if min_idx != i:
-            arr[i], arr[min_idx] = arr[min_idx], arr[i]
-            yield i, min_idx, True, 4  # Swap happened
-        else:
-            yield i, min_idx, False, 2  # No swap
-
-def insertion_sort(arr):
-    n = len(arr)
-    for i in range(1, n):
-        key = arr[i]
-        j = i - 1
-        while j >= 0:
-            yield j, j + 1, False, 2  # Comparison
-            if arr[j] > key:
-                arr[j + 1] = arr[j]
-                yield j + 1, j, True, 1  # Shift
-                j -= 1
-            else:
-                break
-        arr[j + 1] = key
-        yield j + 1, j + 1, True, 1  # Insertion
-
-def merge_sort(arr):
-    def merge_sort_rec(arr, start, end):
-        if end - start > 1:
-            mid = (start + end) // 2
-            yield from merge_sort_rec(arr, start, mid)
-            yield from merge_sort_rec(arr, mid, end)
-            yield from merge(arr, start, mid, end)
-
-    def merge(arr, start, mid, end):
-        left_subarray = arr[start:mid]
-        right_subarray = arr[mid:end]
-
-        left_idx, right_idx = 0, 0
-        current_idx = start
-
-        while left_idx < len(left_subarray) and right_idx < len(right_subarray):
-            yield start + left_idx, mid + right_idx, False, 2  # Comparison
-
-            if left_subarray[left_idx] <= right_subarray[right_idx]:
-                arr[current_idx] = left_subarray[left_idx]
-                left_idx += 1
-            else:
-                arr[current_idx] = right_subarray[right_idx]
-                right_idx += 1
-
-            yield current_idx, current_idx, True, 1  # Placement
-            current_idx += 1
-
-        while left_idx < len(left_subarray):
-            arr[current_idx] = left_subarray[left_idx]
-            left_idx += 1
-            yield current_idx, current_idx, True, 1  # Placement
-            current_idx += 1
-
-        while right_idx < len(right_subarray):
-            arr[current_idx] = right_subarray[right_idx]
-            right_idx += 1
-            yield current_idx, current_idx, True, 1  # Placement
-            current_idx += 1
-
-    yield from merge_sort_rec(arr, 0, len(arr))
-
-def quick_sort(arr):
-    def quick_sort_rec(arr, low, high):
-        if low < high:
-            pi = yield from partition(arr, low, high)
-            yield from quick_sort_rec(arr, low, pi - 1)
-            yield from quick_sort_rec(arr, pi + 1, high)
-
-    def partition(arr, low, high):
-        pivot = arr[high]
-        i = low - 1
-        for j in range(low, high):
-            yield j, high, False, 2  # Comparison
-            if arr[j] < pivot:
-                i += 1
-                arr[i], arr[j] = arr[j], arr[i]
-                yield i, j, True, 4  # Swap
-        arr[i + 1], arr[high] = arr[high], arr[i + 1]
-        yield i + 1, high, True, 4  # Swap pivot
-        return i + 1
-
-    yield from quick_sort_rec(arr, 0, len(arr) - 1)
-
-def heap_sort(arr):
-    n = len(arr)
-
-    def heapify(arr, n, i):
-        largest = i
-        l = 2 * i + 1     # Left child
-        r = 2 * i + 2     # Right child
-
-        if l < n:
-            yield i, l, False, 2  # Comparison
-            if arr[l] > arr[largest]:
-                largest = l
-
-        if r < n:
-            yield largest, r, False, 2  # Comparison
-            if arr[r] > arr[largest]:
-                largest = r
-
-        if largest != i:
-            arr[i], arr[largest] = arr[largest], arr[i]
-            yield i, largest, True, 4  # Swap
-            yield from heapify(arr, n, largest)
-
-    # Build a maxheap
-    for i in range(n // 2 - 1, -1, -1):
-        yield from heapify(arr, n, i)
-
-    # One by one extract elements
-    for i in range(n - 1, 0, -1):
-        arr[i], arr[0] = arr[0], arr[i]
-        yield i, 0, True, 4  # Swap
-        yield from heapify(arr, i, 0)
-
-def shell_sort(arr):
-    n = len(arr)
-    gap = n // 2
-
-    while gap > 0:
-        for i in range(gap, n):
-            temp = arr[i]
-            j = i
-
-            while j >= gap:
-                yield j, j - gap, False, 2  # Comparison
-                if arr[j - gap] > temp:
-                    arr[j] = arr[j - gap]
-                    yield j, j - gap, True, 1  # Shift
-                    j -= gap
-                else:
-                    break
-            arr[j] = temp
-            yield j, j, True, 1  # Insertion
-        gap //= 2
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -496,7 +344,7 @@ class MainWindow(QWidget):
         main_layout.addLayout(visualizers_layout)
 
         # Shared controls
-        controls_layout = QHBoxLayout()  # Changed from QVBoxLayout to QHBoxLayout
+        controls_layout = QVBoxLayout()  # Changed from QHBoxLayout to QVBoxLayout
 
         # Array size controls
         size_control_layout = QVBoxLayout()
@@ -534,6 +382,9 @@ class MainWindow(QWidget):
         steps_control_layout.addWidget(self.steps_slider)
         controls_layout.addLayout(steps_control_layout)
 
+        # Optional: Add spacing between controls
+        controls_layout.addSpacing(10)
+
         main_layout.addLayout(controls_layout)
 
         # Benchmark Controls Layout
@@ -550,7 +401,8 @@ class MainWindow(QWidget):
             "Merge Sort",
             "Quick Sort",
             "Heap Sort",
-            "Shell Sort"
+            "Shell Sort",
+            "Cocktail Sort"
         ]
         checkbox_layout = QHBoxLayout()
         for algo in algorithms:
