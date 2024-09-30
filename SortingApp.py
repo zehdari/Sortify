@@ -5,7 +5,7 @@ import time
 from PyQt6.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem,
     QVBoxLayout, QWidget, QSlider, QPushButton, QHBoxLayout,
-    QLabel, QComboBox, QLineEdit, QFileDialog, QCheckBox, QGroupBox, QScrollArea
+    QLabel, QComboBox, QLineEdit, QFileDialog, QCheckBox, QGroupBox
 )
 from PyQt6.QtCore import QTimer, QRectF, Qt
 from PyQt6.QtGui import QIcon, QPainter, QColor, QPen, QFont
@@ -13,8 +13,8 @@ from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis
 
 from sortAlgorithms import *
 
+# Get absolute path to resource, works for PyInstaller and development.
 def resource_path(relative_path):
-    """Get absolute path to resource, works for PyInstaller and development."""
     if hasattr(sys, '_MEIPASS'):
         # Running in PyInstaller bundle
         base_path = sys._MEIPASS
@@ -112,11 +112,8 @@ class SortingVisualizer(QWidget):
         # Track previously highlighted indices
         self.previous_highlighted_indices = []
 
+    # Calculate steps_per_tick to ensure the green fill animation completes within the total_duration regardless of array size.
     def calculate_green_fill_parameters(self):
-        """
-        Calculate steps_per_tick to ensure the green fill animation completes
-        within the total_duration regardless of array size.
-        """
         num_bars = len(self.arr)
         max_ticks = self.green_fill_total_duration / self.green_fill_timer_interval
         self.steps_per_tick = max(1, num_bars // int(max_ticks)) if max_ticks > 0 else 1
@@ -202,8 +199,8 @@ class SortingVisualizer(QWidget):
             print(f"Exception in visualize_step: {e}")
             self.timer.stop()
 
+    # Start the animation to turn bars green from smallest to largest.
     def start_green_fill_animation(self):
-        """Start the animation to turn bars green from smallest to largest."""
         # Stop the green fill timer if it's active
         if self.green_fill_timer is not None and self.green_fill_timer.isActive():
             self.green_fill_timer.stop()
@@ -260,7 +257,6 @@ class SortingVisualizer(QWidget):
         self.arr = random.sample(range(1, self.array_size + 1), self.array_size)
         self.max_value = max(self.arr)
         self.create_bars()
-        # Recalculate green fill parameters when array size changes
         self.calculate_green_fill_parameters()
 
     def set_timer_interval(self, interval):
@@ -294,7 +290,7 @@ class SortingVisualizer(QWidget):
         self.timer.stop()
         if self.green_fill_timer is not None and self.green_fill_timer.isActive():  
             self.green_fill_timer.stop()
-            self.green_fill_timer = None  # Remove reference
+            self.green_fill_timer = None
 
         self.sort_generator = self.sorting_algorithm(self.arr)
         # Reset counters
@@ -320,10 +316,10 @@ class SortingVisualizer(QWidget):
             self.timer.stop()
 
         # Stop the green fill timer if it exists and is active
-        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():
             self.green_fill_timer.stop()
 
-        event.accept()  # Allow the window to close
+        event.accept()
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -343,7 +339,7 @@ class MainWindow(QWidget):
         main_layout.addLayout(visualizers_layout)
 
         # Shared controls
-        controls_layout = QVBoxLayout()  # Changed from QHBoxLayout to QVBoxLayout
+        controls_layout = QVBoxLayout()
 
         # Array size controls
         size_control_layout = QVBoxLayout()
@@ -533,7 +529,7 @@ class MainWindow(QWidget):
                     pass  # We don't need to process the steps
 
                 end_time = time.perf_counter()
-                elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds with decimals
+                elapsed_time = (end_time - start_time) * 1000
                 runtimes_dict[algo_name].append(elapsed_time)
 
         # Display all benchmark results on a single chart
@@ -555,13 +551,13 @@ class MainWindow(QWidget):
         self.visualizer2.close()
         # Ensure the application quits completely
         QApplication.quit()
-        event.accept()  # Allow the window to close
+        event.accept()
 
 class QChartWindow(QWidget):
     def __init__(self, sizes, runtimes_dict, algorithm_names):
         super().__init__()
         self.setWindowTitle("Benchmark Results")
-        self.setMinimumSize(1000, 800)  # Set a larger initial size
+        self.setMinimumSize(1000, 800)
 
         # Create the chart
         self.chart = QChart()
@@ -600,8 +596,8 @@ class QChartWindow(QWidget):
         max_runtime = max([max(runtimes) for runtimes in runtimes_dict.values()]) if algorithm_names else 100
         axis_y = QValueAxis()
         axis_y.setTitleText("Runtime (ms)")
-        axis_y.setLabelFormat("%.3f")  # Show more decimal places
-        axis_y.setRange(0, max_runtime * 1.1)  # Add 10% padding
+        axis_y.setLabelFormat("%.3f")
+        axis_y.setRange(0, max_runtime * 1.1)
 
         # Set font sizes
         font = QFont()
