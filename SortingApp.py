@@ -5,7 +5,7 @@ import time
 from PyQt6.QtWidgets import (
     QApplication, QGraphicsScene, QGraphicsView, QGraphicsRectItem,
     QVBoxLayout, QWidget, QSlider, QPushButton, QHBoxLayout,
-    QLabel, QComboBox, QLineEdit, QFileDialog
+    QLabel, QComboBox, QLineEdit, QFileDialog, QCheckBox, QGroupBox, QScrollArea
 )
 from PyQt6.QtCore import QTimer, QRectF, Qt
 from PyQt6.QtGui import QIcon, QPainter, QColor, QPen, QFont
@@ -83,26 +83,7 @@ class SortingVisualizer(QWidget):
         self.sort_button.clicked.connect(self.start_sorting)
         self.buttons_layout.addWidget(self.sort_button)
 
-        # Create a horizontal layout for the benchmark button and settings in the same row
-        benchmark_row_layout = QHBoxLayout()
-
-        # Benchmark Button
-        self.benchmark_button = QPushButton("Benchmark")
-        self.benchmark_button.clicked.connect(self.run_benchmark)
-        benchmark_row_layout.addWidget(self.benchmark_button)
-
-        # Max Size input
-        self.max_size_input = QLineEdit("1000")  # Default value to 1000
-        benchmark_row_layout.addWidget(QLabel("Max Size:"))
-        benchmark_row_layout.addWidget(self.max_size_input)
-
-        # Step Size input
-        self.step_size_input = QLineEdit("10")  # Default value to 10
-        benchmark_row_layout.addWidget(QLabel("Step Size:"))
-        benchmark_row_layout.addWidget(self.step_size_input)
-
-        # Add the benchmark_row_layout to the main layout
-        self.buttons_layout.addLayout(benchmark_row_layout)
+        # Note: Removed Benchmark button and related inputs from SortingVisualizer
 
         # Now add the buttons_layout to the main layout
         layout.addLayout(self.buttons_layout)
@@ -115,11 +96,20 @@ class SortingVisualizer(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.visualize_step)
 
+        # Initialize green_fill_timer to None
+        self.green_fill_timer = None  # **Added Initialization**
+
         # Track previously highlighted indices
         self.previous_highlighted_indices = []
 
     def create_bars(self):
         """Create bars based on the array and current window size."""
+        # Stop the green fill timer if it's active
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
+            self.green_fill_timer.stop()
+            self.green_fill_timer = None  # Remove reference
+            self.reset_colors()  # Reset colors to default
+
         scene_width = self.view.viewport().width()
         scene_height = self.view.viewport().height()
 
@@ -217,6 +207,7 @@ class SortingVisualizer(QWidget):
             self.current_green_index += 1
         else:
             self.green_fill_timer.stop()
+            self.green_fill_timer = None  # Remove reference
 
     def update_bar(self, index, value):
         scene_height = self.view.viewport().height()
@@ -233,6 +224,7 @@ class SortingVisualizer(QWidget):
     def reset_colors(self):
         for index in self.previous_highlighted_indices:
             self.rectangles[index].setBrush(QColor('blue'))
+        self.previous_highlighted_indices = []
 
     def update_labels(self):
         self.comparisons_label.setText(f"Comparisons: {self.comparisons}")
@@ -253,8 +245,9 @@ class SortingVisualizer(QWidget):
 
     def shuffle_array(self, arr=None):
         self.timer.stop()
-        if hasattr(self, 'green_fill_timer'):
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
             self.green_fill_timer.stop()
+            self.green_fill_timer = None  # Remove reference
 
         if arr is None:
             self.arr = random.sample(range(1, self.array_size + 1), self.array_size)
@@ -269,8 +262,9 @@ class SortingVisualizer(QWidget):
 
     def start_sorting(self):
         self.timer.stop()
-        if hasattr(self, 'green_fill_timer'):
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
             self.green_fill_timer.stop()
+            self.green_fill_timer = None  # Remove reference
 
         self.sort_generator = self.sorting_algorithm(self.arr)
         # Reset counters
@@ -290,144 +284,18 @@ class SortingVisualizer(QWidget):
         selected_algorithm = self.algorithm_dropdown.currentText()
         self.sorting_algorithm = get_algorithm_by_name(selected_algorithm)
 
-    def run_benchmark(self):
-        # Run benchmark synchronously
-        self.perform_benchmark()
-
-    def perform_benchmark(self):
-        try:
-            selected_algorithm_name = self.algorithm_dropdown.currentText()
-            sorting_function = get_algorithm_by_name(selected_algorithm_name)
-
-            # Get max size and step size from inputs
-            try:
-                max_size = int(self.max_size_input.text())
-                step_size = int(self.step_size_input.text())
-            except ValueError:
-                max_size = 5000
-                step_size = 250
-                self.max_size_input.setText(str(max_size))
-                self.step_size_input.setText(str(step_size))
-
-            if max_size < 10:
-                max_size = 10
-                self.max_size_input.setText(str(max_size))
-            if step_size < 1:
-                step_size = 1
-                self.step_size_input.setText(str(step_size))
-
-            sizes = list(range(10, max_size + 1, step_size))
-            runtimes = []
-
-            for size in sizes:
-                arr = random.sample(range(size), size)
-                arr_copy = arr.copy()
-
-                start_time = time.perf_counter()
-
-                # Run the sorting algorithm without visualization
-                sort_generator = sorting_function(arr_copy)
-                for _ in sort_generator:
-                    pass  # We don't need to process the steps
-
-                end_time = time.perf_counter()
-                elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds with decimals
-                runtimes.append(elapsed_time)
-
-            # Display the benchmark results
-            self.display_benchmark_results(sizes, runtimes, selected_algorithm_name)
-        except Exception as e:
-            print(f"Exception during benchmarking: {e}")
-
-    def display_benchmark_results(self, sizes, runtimes, algorithm_name):
-        # Create a new window to display the chart
-        self.chart_window = QChartWindow(sizes, runtimes, algorithm_name)
-        self.chart_window.show()
+    # Removed run_benchmark and perform_benchmark from SortingVisualizer
 
     def closeEvent(self, event):
         # Stop the main visualization timer
         if self.timer.isActive():
             self.timer.stop()
-    
+
         # Stop the green fill timer if it exists and is active
-        if hasattr(self, 'green_fill_timer') and self.green_fill_timer.isActive():
+        if self.green_fill_timer is not None and self.green_fill_timer.isActive():  # **Modified Condition**
             self.green_fill_timer.stop()
-    
+
         event.accept()  # Allow the window to close
-
-class QChartWindow(QWidget):
-    def __init__(self, sizes, runtimes, algorithm_name):
-        super().__init__()
-        self.setWindowTitle(f"Benchmark of {algorithm_name}")
-        self.setMinimumSize(1000, 800)  # Set a larger initial size
-
-        # Create the chart and add data
-        self.series = QLineSeries()
-        for size, runtime in zip(sizes, runtimes):
-            self.series.append(size, runtime)
-
-        self.chart = QChart()
-        self.chart.addSeries(self.series)
-        self.chart.setTitle(f"Benchmark of {algorithm_name}")
-
-        self.chart.legend().hide()
-
-        # Customize axes
-        axis_x = QValueAxis()
-        axis_x.setTitleText("Array Size (n)")
-        axis_x.setLabelFormat("%d")
-        max_labels = 10  # Maximum number of labels to display
-        tick_interval = max(1, len(sizes) // max_labels)
-        axis_x.setTickCount(min(len(sizes), max_labels + 1))
-        axis_x.setRange(min(sizes), max(sizes))
-
-        axis_y = QValueAxis()
-        axis_y.setTitleText("Runtime (ms)")
-        axis_y.setLabelFormat("%.3f")  # Show more decimal places
-        axis_y.setRange(0, max(runtimes) * 1.1)  # Add 10% padding
-
-        # Set font sizes
-        font = QFont()
-        font.setPointSize(12)
-        axis_x.setLabelsFont(font)
-        axis_y.setLabelsFont(font)
-        axis_x.setTitleFont(font)
-        axis_y.setTitleFont(font)
-        self.chart.setTitleFont(font)
-
-        # Add axes to the chart
-        self.chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
-        self.chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
-
-        # Attach axes to the series
-        self.series.attachAxis(axis_x)
-        self.series.attachAxis(axis_y)
-
-        # Create the chart view and set it as the central widget
-        self.chart_view = QChartView(self.chart)
-        self.chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.chart_view)
-
-        # Add Save Graph button
-        self.save_button = QPushButton("Save Graph")
-        self.save_button.clicked.connect(self.save_graph)
-        layout.addWidget(self.save_button)
-
-        self.setLayout(layout)
-
-    def save_graph(self):
-        # Open a file dialog to save the image
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save Graph As",
-            "",
-            "PNG Files (*.png);;JPEG Files (*.jpg);;All Files (*)",
-        )
-        if filename:
-            pixmap = self.chart_view.grab()
-            pixmap.save(filename)
 
 def get_algorithm_by_name(name):
     if name == "Bubble Sort":
@@ -628,39 +496,99 @@ class MainWindow(QWidget):
         main_layout.addLayout(visualizers_layout)
 
         # Shared controls
-        controls_layout = QVBoxLayout()
+        controls_layout = QHBoxLayout()  # Changed from QVBoxLayout to QHBoxLayout
 
-        # Array size slider
+        # Array size controls
+        size_control_layout = QVBoxLayout()
+        self.size_label = QLabel(f"Array Size: {self.visualizer1.array_size}")
         self.size_slider = QSlider(Qt.Orientation.Horizontal)
         self.size_slider.setMinimum(4)
-        self.size_slider.setMaximum(1000)
+        self.size_slider.setMaximum(5000)
         self.size_slider.setValue(self.visualizer1.array_size)
         self.size_slider.valueChanged.connect(self.adjust_array_size)
-        self.size_label = QLabel(f"Array Size: {self.visualizer1.array_size}")
-        controls_layout.addWidget(self.size_label)
-        controls_layout.addWidget(self.size_slider)
+        size_control_layout.addWidget(self.size_label)
+        size_control_layout.addWidget(self.size_slider)
+        controls_layout.addLayout(size_control_layout)
 
-        # Delay slider
+        # Delay controls
+        delay_control_layout = QVBoxLayout()
+        self.delay_label = QLabel(f"Delay: {self.visualizer1.timer_interval} ms")
         self.delay_slider = QSlider(Qt.Orientation.Horizontal)
         self.delay_slider.setMinimum(0)
         self.delay_slider.setMaximum(1000)
         self.delay_slider.setValue(self.visualizer1.timer_interval)
         self.delay_slider.valueChanged.connect(self.adjust_timer_interval)
-        self.delay_label = QLabel(f"Delay: {self.visualizer1.timer_interval} ms")
-        controls_layout.addWidget(self.delay_label)
-        controls_layout.addWidget(self.delay_slider)
+        delay_control_layout.addWidget(self.delay_label)
+        delay_control_layout.addWidget(self.delay_slider)
+        controls_layout.addLayout(delay_control_layout)
 
-        # Steps per call slider
+        # Steps per call controls
+        steps_control_layout = QVBoxLayout()
+        self.steps_label = QLabel(f"Steps per Call: {self.visualizer1.steps_per_call}")
         self.steps_slider = QSlider(Qt.Orientation.Horizontal)
         self.steps_slider.setMinimum(1)
         self.steps_slider.setMaximum(1000)
         self.steps_slider.setValue(self.visualizer1.steps_per_call)
         self.steps_slider.valueChanged.connect(self.adjust_steps_per_call)
-        self.steps_label = QLabel(f"Steps per Call: {self.visualizer1.steps_per_call}")
-        controls_layout.addWidget(self.steps_label)
-        controls_layout.addWidget(self.steps_slider)
+        steps_control_layout.addWidget(self.steps_label)
+        steps_control_layout.addWidget(self.steps_slider)
+        controls_layout.addLayout(steps_control_layout)
 
         main_layout.addLayout(controls_layout)
+
+        # Benchmark Controls Layout
+        benchmark_controls_layout = QVBoxLayout()
+        benchmark_group = QGroupBox("Benchmark Settings")
+        benchmark_group_layout = QVBoxLayout()
+
+        # Algorithm Checkboxes
+        self.algorithm_checkboxes = []
+        algorithms = [
+            "Bubble Sort",
+            "Selection Sort",
+            "Insertion Sort",
+            "Merge Sort",
+            "Quick Sort",
+            "Heap Sort",
+            "Shell Sort"
+        ]
+        checkbox_layout = QHBoxLayout()
+        for algo in algorithms:
+            checkbox = QCheckBox(algo)
+            checkbox.setChecked(True)
+            checkbox.stateChanged.connect(self.update_benchmark_button_state)
+            self.algorithm_checkboxes.append(checkbox)
+            checkbox_layout.addWidget(checkbox)
+        benchmark_group_layout.addLayout(checkbox_layout)
+
+        # Max Size and Step Size inputs arranged horizontally
+        benchmark_input_layout = QHBoxLayout()
+
+        # Max Size input
+        max_size_layout = QVBoxLayout()
+        self.benchmark_max_size_input = QLineEdit("1000") 
+        max_size_layout.addWidget(QLabel("Max Size:"))
+        max_size_layout.addWidget(self.benchmark_max_size_input)
+        benchmark_input_layout.addLayout(max_size_layout)
+
+        # Step Size input
+        step_size_layout = QVBoxLayout()
+        self.benchmark_step_size_input = QLineEdit("10")  
+        step_size_layout.addWidget(QLabel("Step Size:"))
+        step_size_layout.addWidget(self.benchmark_step_size_input)
+        benchmark_input_layout.addLayout(step_size_layout)
+
+        benchmark_group_layout.addLayout(benchmark_input_layout)
+
+        # Benchmark Button
+        self.benchmark_button = QPushButton("Benchmark")
+        self.benchmark_button.clicked.connect(self.run_benchmark)
+        self.benchmark_button.setEnabled(True)
+        benchmark_group_layout.addWidget(self.benchmark_button)
+
+        benchmark_group.setLayout(benchmark_group_layout)
+        benchmark_controls_layout.addWidget(benchmark_group)
+        main_layout.addLayout(benchmark_controls_layout)
 
         # Buttons for start and shuffle, arranged horizontally
         buttons_layout = QHBoxLayout()
@@ -713,7 +641,63 @@ class MainWindow(QWidget):
         # Start sorting in both visualizers
         self.visualizer1.start_sorting()
         self.visualizer2.start_sorting()
-    
+
+    def run_benchmark(self):
+        selected_algorithms = [cb.text() for cb in self.algorithm_checkboxes if cb.isChecked()]
+        if not selected_algorithms:
+            print("No algorithms selected for benchmarking.")
+            return
+
+        # Get max size and step size from inputs
+        try:
+            max_size = int(self.benchmark_max_size_input.text())
+            step_size = int(self.benchmark_step_size_input.text())
+        except ValueError:
+            max_size = 5000
+            step_size = 250
+            self.benchmark_max_size_input.setText(str(max_size))
+            self.benchmark_step_size_input.setText(str(step_size))
+
+        if max_size < 10:
+            max_size = 10
+            self.benchmark_max_size_input.setText(str(max_size))
+        if step_size < 1:
+            step_size = 1
+            self.benchmark_step_size_input.setText(str(step_size))
+
+        sizes = list(range(10, max_size + 1, step_size))
+        runtimes_dict = {algo: [] for algo in selected_algorithms}
+
+        for algo_name in selected_algorithms:
+            sorting_function = get_algorithm_by_name(algo_name)
+            for size in sizes:
+                arr = random.sample(range(size), size)
+                arr_copy = arr.copy()
+
+                start_time = time.perf_counter()
+
+                # Run the sorting algorithm without visualization
+                sort_generator = sorting_function(arr_copy)
+                for _ in sort_generator:
+                    pass  # We don't need to process the steps
+
+                end_time = time.perf_counter()
+                elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds with decimals
+                runtimes_dict[algo_name].append(elapsed_time)
+
+        # Display all benchmark results on a single chart
+        self.display_benchmark_results(sizes, runtimes_dict, selected_algorithms)
+
+    def display_benchmark_results(self, sizes, runtimes_dict, algorithm_names):
+        # Create a new window to display the chart
+        self.chart_window = QChartWindow(sizes, runtimes_dict, algorithm_names)
+        self.chart_window.show()
+
+    def update_benchmark_button_state(self):
+        # Enable the benchmark button if at least one checkbox is checked
+        any_checked = any(cb.isChecked() for cb in self.algorithm_checkboxes)
+        self.benchmark_button.setEnabled(any_checked)
+
     def closeEvent(self, event):
         # Close child SortingVisualizer instances
         self.visualizer1.close()
@@ -722,15 +706,107 @@ class MainWindow(QWidget):
         QApplication.quit()
         event.accept()  # Allow the window to close
 
+class QChartWindow(QWidget):
+    def __init__(self, sizes, runtimes_dict, algorithm_names):
+        super().__init__()
+        self.setWindowTitle("Benchmark Results")
+        self.setMinimumSize(1000, 800)  # Set a larger initial size
+
+        # Create the chart
+        self.chart = QChart()
+        self.chart.setTitle("Benchmark Results")
+
+        # Define a list of colors for different algorithms
+        colors = [
+            QColor('red'), QColor('green'), QColor('blue'),
+            QColor('magenta'), QColor('cyan'), QColor('orange'),
+            QColor('purple'), QColor('brown'), QColor('pink'),
+            QColor('gray')
+        ]
+
+        # Add a QLineSeries for each algorithm
+        for idx, algo_name in enumerate(algorithm_names):
+            series = QLineSeries()
+            for size, runtime in zip(sizes, runtimes_dict[algo_name]):
+                series.append(size, runtime)
+            series.setName(algo_name)
+            series.setColor(colors[idx % len(colors)])
+            self.chart.addSeries(series)
+
+        self.chart.legend().setVisible(True)
+        self.chart.legend().setAlignment(Qt.AlignmentFlag.AlignBottom)
+
+        # Customize axes
+        axis_x = QValueAxis()
+        axis_x.setTitleText("Array Size (n)")
+        axis_x.setLabelFormat("%d")
+        max_labels = 10  # Maximum number of labels to display
+        tick_interval = max(1, len(sizes) // max_labels)
+        axis_x.setTickCount(min(len(sizes), max_labels + 1))
+        axis_x.setRange(min(sizes), max(sizes))
+
+        # Determine the maximum runtime across all algorithms for Y-axis range
+        max_runtime = max([max(runtimes) for runtimes in runtimes_dict.values()]) if algorithm_names else 100
+        axis_y = QValueAxis()
+        axis_y.setTitleText("Runtime (ms)")
+        axis_y.setLabelFormat("%.3f")  # Show more decimal places
+        axis_y.setRange(0, max_runtime * 1.1)  # Add 10% padding
+
+        # Set font sizes
+        font = QFont()
+        font.setPointSize(12)
+        axis_x.setLabelsFont(font)
+        axis_y.setLabelsFont(font)
+        axis_x.setTitleFont(font)
+        axis_y.setTitleFont(font)
+        self.chart.setTitleFont(font)
+
+        # Add axes to the chart
+        self.chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        self.chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+
+        # Attach axes to the series
+        for series in self.chart.series():
+            series.attachAxis(axis_x)
+            series.attachAxis(axis_y)
+
+        # Create the chart view and set it as the central widget
+        self.chart_view = QChartView(self.chart)
+        self.chart_view.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.chart_view)
+
+        # Add Save Graph button
+        self.save_button = QPushButton("Save Graph")
+        self.save_button.clicked.connect(self.save_graph)
+        layout.addWidget(self.save_button)
+
+        self.setLayout(layout)
+
+    def save_graph(self):
+        # Open a file dialog to save the image
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Graph As",
+            "",
+            "PNG Files (*.png);;JPEG Files (*.jpg);;All Files (*)",
+        )
+        if filename:
+            pixmap = self.chart_view.grab()
+            pixmap.save(filename)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # Set the taskbar and window icon
-    app.setWindowIcon(QIcon(resource_path("resources/sorticon.ico")))
+    icon_path = resource_path("resources/sorticon.ico")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+    else:
+        print(f"Icon not found at {icon_path}. Continuing without setting the icon.")
 
     # Instantiate the main window with two sorting visualizers
     main_window = MainWindow()
     main_window.show()
-    app.quit()
-
     sys.exit(app.exec())
