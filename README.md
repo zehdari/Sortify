@@ -25,7 +25,7 @@
 
 ### Precompiled Executables
 
-You can download precompiled executables for **macOS**, **Ubuntu**, **Windows**, and **RedHat** from the [Releases](https://github.com/Sortify/releases) page.
+You can download precompiled executables for **macOS**, **Ubuntu**, **Windows**, and **RedHat** from the [Releases](https://github.com/zehdari/Sortify/releases) page.
 
 1. **Download** the appropriate zip file for your operating system:
    - macOS
