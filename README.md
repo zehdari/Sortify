@@ -25,7 +25,7 @@
 
 ### Precompiled Executables
 
-You can download precompiled executables for **macOS**, **Ubuntu**, **Windows**, and **RedHat** from the [Releases](https://github.com/<your-repo>/releases) page.
+You can download precompiled executables for **macOS**, **Ubuntu**, **Windows**, and **RedHat** from the [Releases](https://github.com/Sortify/releases) page.
 
 1. **Download** the appropriate zip file for your operating system:
    - macOS
@@ -69,7 +69,7 @@ If you prefer to run the app from the source code, follow these steps:
 1. **Clone the repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/zehdari/Sortify
    cd sortify
    ```
 
